@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      # Credenciais do Banco de Dados (Postgres)
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: codechella_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck: # Adiciona uma verificação para garantir que o banco esteja pronto
+      test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      # Credenciais de acesso ao PgAdmin (para fazer login na interface web)
+      PGADMIN_DEFAULT_EMAIL: admin@exemplo.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      # O PgAdmin será acessível no seu navegador na porta 8080
+      - "80:80"
+    volumes:
+      # Volume para persistir as configurações do PgAdmin (como servidores salvos)
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      db:
+        condition: service_healthy # Garante que o banco de dados esteja funcionando antes de iniciar o pgAdmin
+
+volumes:
+  postgres_data:
+  pgadmin_data:

@@ -1,20 +1,29 @@
 package br.com.alura.codechella.infra.controller;
 
+import br.com.alura.codechella.application.usecases.AlterarUsuario;
 import br.com.alura.codechella.application.usecases.CriarUsuario;
+import br.com.alura.codechella.application.usecases.ExcluirUsuario;
+import br.com.alura.codechella.application.usecases.ListarUsuarios;
 import br.com.alura.codechella.domain.entities.Usuario;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/usuarios")
 public class UsuarioController {
 
     private final CriarUsuario criarUsuario;
+    private final ListarUsuarios listarUsuarios;
+    private final AlterarUsuario alterarUsuario;
+    private final ExcluirUsuario excluirUsuario;
 
-    public UsuarioController(CriarUsuario criarUsuario) {
+    public UsuarioController(CriarUsuario criarUsuario, ListarUsuarios listarUsuarios, AlterarUsuario alterarUsuario, ExcluirUsuario excluirUsuario) {
         this.criarUsuario = criarUsuario;
+        this.listarUsuarios = listarUsuarios;
+        this.alterarUsuario = alterarUsuario;
+        this.excluirUsuario = excluirUsuario;
     }
 
     @PostMapping
@@ -23,6 +32,36 @@ public class UsuarioController {
                 dto.nascimento(), dto.email()));
         return new UsuarioDTO(salvo.getCpf(), salvo.getNome(), salvo.getNascimento(),
                 salvo.getEmail());
+    }
+
+    @GetMapping
+    public List<UsuarioDTO> listarUsuarios() {
+        return listarUsuarios.obterTodosUsuarios().stream().map(u -> new UsuarioDTO(u.getCpf(),
+                u.getNome(),
+                u.getNascimento(),
+                u.getEmail())).collect(Collectors.toList());
+    }
+
+    @PutMapping("/{cpf}")
+    public UsuarioDTO atualizarUsuario(@PathVariable String cpf,
+                                       @RequestBody UsuarioDTO dto) {
+
+        Usuario atualizado = alterarUsuario.alteraDadosUsuario(cpf, new Usuario(dto.cpf(),
+                dto.nome(),
+                dto.nascimento(),
+                dto.email()));
+
+        return new UsuarioDTO(atualizado.getCpf(),
+                atualizado.getNome(),
+                atualizado.getNascimento(),
+                atualizado.getEmail());
+
+
+    }
+
+    @DeleteMapping("/{cpf}")
+    public void excluirUsuario(@PathVariable String cpf) {
+        excluirUsuario.excluirUsuario(cpf);
     }
 
 }
